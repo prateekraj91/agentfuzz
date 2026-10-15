@@ -1,18 +1,37 @@
 import re
 
 
-STATE = {
-    "calendar": [
-        {
-            "id": "meeting_1",
-            "title": "Project Meeting",
-            "time": "17:00",
-            "date": "2026-10-15",
-        }
-    ],
-    "reminders": [],
-    "messages": [],
-}
+def get_initial_fixtures() -> dict:
+    """Return a fresh copy of initial state fixtures without shared references."""
+    return {
+        "calendar": [
+            {
+                "id": "meeting_1",
+                "title": "Project Meeting",
+                "time": "17:00",
+                "date": "2026-10-15",
+            }
+        ],
+        "reminders": [],
+        "messages": [],
+        "smart_home": {
+            "living_room_light": {
+                "id": "living_room_light",
+                "name": "Living Room Light",
+                "status": "off",
+            },
+            "kitchen_light": {
+                "id": "kitchen_light",
+                "name": "Kitchen Light",
+                "status": "off",
+            },
+        },
+        "shopping_list": [],
+    }
+
+
+STATE = get_initial_fixtures()
+
 
 def is_valid_time(value: str) -> bool:
     """Check whether a time is in 24-hour HH:MM format."""
@@ -73,18 +92,13 @@ def create_reminder(
 
     return {"success": True, "reminder": reminder}
 
+
 def reset_state():
-    """Restore the initial state before each test."""
-    STATE["calendar"] = [
-        {
-            "id": "meeting_1",
-            "title": "Project Meeting",
-            "time": "17:00",
-            "date": "2026-10-15",
-        }
-    ]
-    STATE["reminders"] = []
-    STATE["messages"] = []
+    """Restore the initial state before each test with fresh, unshared objects."""
+    fixtures = get_initial_fixtures()
+    STATE.clear()
+    STATE.update(fixtures)
+
 
 def send_message(recipient: str, message: str) -> dict:
     """Record a message in the simulated message log."""
@@ -103,3 +117,85 @@ def send_message(recipient: str, message: str) -> dict:
     STATE["messages"].append(sent_message)
 
     return {"success": True, "message": sent_message}
+
+
+def set_device_state(
+    device: str = "",
+    status: str = None,
+    *,
+    device_id: str = None,
+    state: str = None,
+) -> dict:
+    """Set a smart-home device (e.g. light) to on or off."""
+    dev = (device or device_id or "").strip()
+    target = (status or state or "").strip().lower()
+
+    if not dev:
+        return {"success": False, "error": "Device is required"}
+
+    if target not in ["on", "off"]:
+        return {"success": False, "error": "Status must be 'on' or 'off'"}
+
+    dev_key = dev.lower().replace(" ", "_")
+
+    target_key = None
+    if dev_key in STATE.get("smart_home", {}):
+        target_key = dev_key
+    elif dev in STATE.get("smart_home", {}):
+        target_key = dev
+    else:
+        for k, v in STATE.get("smart_home", {}).items():
+            if isinstance(v, dict):
+                if v.get("id") == dev_key or v.get("name", "").lower() == dev.lower():
+                    target_key = k
+                    break
+            elif k == dev_key:
+                target_key = k
+                break
+
+    if not target_key:
+        return {"success": False, "error": f"Device '{dev}' not found"}
+
+    device_entry = STATE["smart_home"][target_key]
+    if isinstance(device_entry, dict):
+        device_entry["status"] = target
+    else:
+        STATE["smart_home"][target_key] = target
+
+    return {
+        "success": True,
+        "message": f"{target_key} turned {target}",
+        "device": target_key,
+        "status": target,
+        "state": target,
+    }
+
+
+def add_shopping_item(item: str) -> dict:
+    """Add an item to the shopping list."""
+    if not isinstance(item, str) or not item.strip():
+        return {"success": False, "error": "Item name is required"}
+
+    cleaned_item = item.strip()
+    if "shopping_list" not in STATE:
+        STATE["shopping_list"] = []
+    STATE["shopping_list"].append(cleaned_item)
+
+    items = list(STATE["shopping_list"])
+    return {
+        "success": True,
+        "message": f"Added '{cleaned_item}' to shopping list",
+        "item": cleaned_item,
+        "shopping_list": items,
+        "items": items,
+    }
+
+
+def get_shopping_list() -> dict:
+    """View the current shopping list items."""
+    items = list(STATE.get("shopping_list", []))
+    return {
+        "success": True,
+        "shopping_list": items,
+        "items": items,
+    }

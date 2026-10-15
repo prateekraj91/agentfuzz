@@ -2,7 +2,15 @@
 import json
 import ollama
 
-from app.tools import STATE, move_meeting, create_reminder, send_message
+from app.tools import (
+    STATE,
+    move_meeting,
+    create_reminder,
+    send_message,
+    set_device_state,
+    add_shopping_item,
+    get_shopping_list,
+)
 from copy import deepcopy
 from app.trace import log_event
 from app.pending import set_pending_message, get_pending_message
@@ -78,12 +86,67 @@ TOOLS = [
             },
         },
     },
+    {
+        "type": "function",
+        "function": {
+            "name": "set_device_state",
+            "description": (
+                "Turn a smart-home device (such as a light) on or off."
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "device": {
+                        "type": "string",
+                        "description": "Device identifier or name, e.g. 'living_room_light'",
+                    },
+                    "status": {
+                        "type": "string",
+                        "enum": ["on", "off"],
+                        "description": "Target status ('on' or 'off')",
+                    },
+                },
+                "required": ["device", "status"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "add_shopping_item",
+            "description": "Add an item to the shopping list.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "item": {
+                        "type": "string",
+                        "description": "Name of the item to add to the shopping list",
+                    },
+                },
+                "required": ["item"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "get_shopping_list",
+            "description": "View all items currently on the shopping list.",
+            "parameters": {
+                "type": "object",
+                "properties": {},
+            },
+        },
+    },
 ]
 
 TOOL_FUNCTIONS = {
     "move_meeting": move_meeting,
     "create_reminder": create_reminder,
     "send_message": send_message,
+    "set_device_state": set_device_state,
+    "add_shopping_item": add_shopping_item,
+    "get_shopping_list": get_shopping_list,
 }
 
 
@@ -95,7 +158,9 @@ def run_agent(user_request: str) -> dict:
                 "You are a home assistant. "
                 "The current simulated date is 2026-10-15. "
                 "The calendar contains meeting_1, Project Meeting, "
-                "at 17:00. Use tools to perform requested actions. "
+                "at 17:00. You manage calendar, reminders, messages, "
+                "smart-home devices (e.g. living_room_light, kitchen_light), "
+                "and the shopping list. Use tools to perform requested actions. "
                 "Only claim actions succeeded when tool results confirm them. "
                 "For this prototype, interpret relative times using the "
                 "simulated meeting time. Call tools as needed."
