@@ -11,6 +11,7 @@ STATE = {
         }
     ],
     "reminders": [],
+    "messages": [],
 }
 
 def is_valid_time(value: str) -> bool:
@@ -83,3 +84,22 @@ def reset_state():
         }
     ]
     STATE["reminders"] = []
+    STATE["messages"] = []
+
+def send_message(recipient: str, message: str) -> dict:
+    """Record a message in the simulated message log."""
+    if not isinstance(recipient, str) or not recipient.strip():
+        return {"success": False, "error": "Recipient is required"}
+
+    if not isinstance(message, str) or not message.strip():
+        return {"success": False, "error": "Message content is required"}
+
+    sent_message = {
+        "id": f"message_{len(STATE['messages']) + 1}",
+        "recipient": recipient.strip(),
+        "message": message.strip(),
+    }
+
+    STATE["messages"].append(sent_message)
+
+    return {"success": True, "message": sent_message}

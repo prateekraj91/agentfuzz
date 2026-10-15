@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AgentFuzz | Home Assistant</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+
+<body>
+    <header class="topbar">
+        <div>
+            <h1>AgentFuzz</h1>
+            <p>Home assistant reliability simulator</p>
+        </div>
+        <span id="connection-status">Checking connection...</span>
+    </header>
+
+    <main class="dashboard">
+        <section class="panel chat-panel">
+            <h2>Assistant</h2>
+            <div id="chat-messages" aria-live="polite">
+                <div class="message assistant">
+                    Hi! I can manage your calendar and reminders.
+                </div>
+            </div>
+
+            <form id="chat-form">
+                <input id="chat-input" type="text" placeholder="Move my 5 PM meeting to 6 PM..." autocomplete="off"
+                    required>
+                <button type="submit" id="send-button">Send</button>
+            </form>
+        </section>
+
+        <section class="panel">
+            <h2>Calendar</h2>
+            <div id="calendar-panel">
+                <p class="empty-state">Loading calendar...</p>
+            </div>
+        </section>
+
+        <section class="panel">
+            <h2>Reminders</h2>
+            <div id="reminders-panel">
+                <p class="empty-state">Loading reminders...</p>
+            </div>
+        </section>
+
+        <section class="panel action-panel">
+            <h2>Action log</h2>
+            <div id="action-log" aria-live="polite">
+                <p class="empty-state">Actions will appear here.</p>
+            </div>
+        </section>
+    </main>
+
+    <script src="/static/app.js"></script>
+</body>
+
+</html>

@@ -2,9 +2,10 @@
 import json
 import ollama
 
-from app.tools import STATE, move_meeting, create_reminder
+from app.tools import STATE, move_meeting, create_reminder, send_message
 from copy import deepcopy
 from app.trace import log_event
+from app.pending import set_pending_message, get_pending_message
 
 MODEL = "qwen2.5:7b"
 
@@ -53,11 +54,36 @@ TOOLS = [
             },
         },
     },
+    {
+        "type": "function",
+        "function": {
+            "name": "send_message",
+            "description": (
+                "Prepare a message for a recipient. "
+                "Do not send until the user confirms."
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "recipient": {
+                        "type": "string",
+                        "description": "Message recipient",
+                    },
+                    "message": {
+                        "type": "string",
+                        "description": "Message content",
+                    },
+                },
+                "required": ["recipient", "message"],
+            },
+        },
+    },
 ]
 
 TOOL_FUNCTIONS = {
     "move_meeting": move_meeting,
     "create_reminder": create_reminder,
+    "send_message": send_message,
 }
 
 
@@ -111,6 +137,48 @@ def run_agent(user_request: str) -> dict:
         for call in message.tool_calls:
             name = call.function.name
             args = call.function.arguments
+
+            if name == "send_message":
+                if get_pending_message() is not None:
+                    return {
+                        "reply": (
+                            "A message is already awaiting confirmation. "
+                            "Please confirm or cancel it before sending "
+                            "another."
+                        ),
+                        "trace": trace,
+                        "state": STATE,
+                    }
+
+                set_pending_message(
+                    recipient=args.get("recipient", ""),
+                    message=args.get("message", ""),
+                )
+                pending_result = {
+                    "success": False,
+                    "pending_confirmation": True,
+                    "message": "Waiting for user confirmation.",
+                }
+                trace.append({
+                    "step": step + 1,
+                    "tool": name,
+                    "arguments": args,
+                    "result": pending_result,
+                })
+                return {
+                    "reply": (
+                        f"Please confirm sending this message to "
+                        f"{args.get('recipient', '')}: "
+                        f"{args.get('message', '')}"
+                    ),
+                    "pending_confirmation": {
+                        "recipient": args.get("recipient", ""),
+                        "message": args.get("message", ""),
+                    },
+                    "trace": trace,
+                    "state": STATE,
+                }
+
             before_state = deepcopy(STATE)
             log_event("tool_call", {
                 "step": step + 1,
