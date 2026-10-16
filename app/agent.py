@@ -14,6 +14,7 @@ from app.tools import (
 from copy import deepcopy
 from app.trace import log_event
 from app.pending import set_pending_message, get_pending_message
+from app.faults import apply_fault
 
 MODEL = "qwen2.5:7b"
 
@@ -150,7 +151,7 @@ TOOL_FUNCTIONS = {
 }
 
 
-def run_agent(user_request: str) -> dict:
+def run_agent(user_request: str, options: dict | None = None) -> dict:
     messages = [
         {
             "role": "system",
@@ -170,13 +171,18 @@ def run_agent(user_request: str) -> dict:
     ]
 
     trace = []
+    call_step = 0
 
     for step in range(6):
-        response = ollama.chat(
-            model=MODEL,
-            messages=messages,
-            tools=TOOLS,
-        )
+        chat_kwargs = {
+            "model": MODEL,
+            "messages": messages,
+            "tools": TOOLS,
+        }
+        if options is not None:
+            chat_kwargs["options"] = options
+
+        response = ollama.chat(**chat_kwargs)
 
         message = response.message
         log_event("model_message", {
@@ -202,8 +208,11 @@ def run_agent(user_request: str) -> dict:
         for call in message.tool_calls:
             name = call.function.name
             args = call.function.arguments
+            call_step += 1
 
-            if name == "send_message":
+            fault = apply_fault(name, args)
+
+            if fault is None and name == "send_message":
                 if get_pending_message() is not None:
                     return {
                         "reply": (
@@ -225,10 +234,13 @@ def run_agent(user_request: str) -> dict:
                     "message": "Waiting for user confirmation.",
                 }
                 trace.append({
-                    "step": step + 1,
+                    "step": call_step,
+                    "turn": step + 1,
                     "tool": name,
                     "arguments": args,
                     "result": pending_result,
+                    "state_before": deepcopy(STATE),
+                    "state_after": deepcopy(STATE),
                 })
                 return {
                     "reply": (
@@ -246,12 +258,15 @@ def run_agent(user_request: str) -> dict:
 
             before_state = deepcopy(STATE)
             log_event("tool_call", {
-                "step": step + 1,
+                "step": call_step,
+                "turn": step + 1,
                 "tool": name,
                 "arguments": args,
             })
 
-            if name not in TOOL_FUNCTIONS:
+            if fault is not None:
+                result = fault
+            elif name not in TOOL_FUNCTIONS:
                 result = {"success": False, "error": "Unknown tool"}
             else:
                 try:
@@ -263,7 +278,8 @@ def run_agent(user_request: str) -> dict:
                     }
 
             log_event("tool_result", {
-                "step": step + 1,
+                "step": call_step,
+                "turn": step + 1,
                 "tool": name,
                 "result": result,
                 "state_before": before_state,
@@ -271,10 +287,13 @@ def run_agent(user_request: str) -> dict:
             })
 
             trace.append({
-                "step": step + 1,
+                "step": call_step,
+                "turn": step + 1,
                 "tool": name,
                 "arguments": args,
                 "result": result,
+                "state_before": before_state,
+                "state_after": deepcopy(STATE),
             })
 
             messages.append({

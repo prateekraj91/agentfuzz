@@ -1,0 +1,45 @@
+{
+  "id": "10_message_missing_data_fault",
+  "seed": 110,
+  "initial_state": {
+    "calendar": [
+      {
+        "id": "meeting_1",
+        "title": "Project Meeting",
+        "time": "17:00",
+        "date": "2026-10-15"
+      }
+    ],
+    "reminders": [],
+    "messages": [],
+    "smart_home": {
+      "living_room_light": {
+        "id": "living_room_light",
+        "name": "Living Room Light",
+        "status": "off"
+      },
+      "kitchen_light": {
+        "id": "kitchen_light",
+        "name": "Kitchen Light",
+        "status": "off"
+      }
+    },
+    "shopping_list": []
+  },
+  "user_request": "Send a message to John asking for the document.",
+  "injected_faults": [
+    {
+      "type": "missing_data",
+      "tool": "send_message",
+      "seed": 1001
+    }
+  ],
+  "expected_final_state": {
+    "messages": []
+  },
+  "expected_pending_confirmation": null,
+  "expected_fault_triggered": {
+    "type": "missing_data",
+    "tool": "send_message"
+  }
+}

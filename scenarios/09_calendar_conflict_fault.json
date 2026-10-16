@@ -1,0 +1,49 @@
+{
+  "id": "09_calendar_conflict_fault",
+  "seed": 109,
+  "initial_state": {
+    "calendar": [
+      {
+        "id": "meeting_1",
+        "title": "Project Meeting",
+        "time": "17:00",
+        "date": "2026-10-15"
+      }
+    ],
+    "reminders": [],
+    "messages": [],
+    "smart_home": {
+      "living_room_light": {
+        "id": "living_room_light",
+        "name": "Living Room Light",
+        "status": "off"
+      },
+      "kitchen_light": {
+        "id": "kitchen_light",
+        "name": "Kitchen Light",
+        "status": "off"
+      }
+    },
+    "shopping_list": []
+  },
+  "user_request": "Move my 5 PM meeting to 18:00.",
+  "injected_faults": [
+    {
+      "type": "conflict",
+      "tool": "move_meeting",
+      "seed": 901
+    }
+  ],
+  "expected_final_state": {
+    "calendar": [
+      {
+        "id": "meeting_1",
+        "time": "17:00"
+      }
+    ]
+  },
+  "expected_fault_triggered": {
+    "type": "conflict",
+    "tool": "move_meeting"
+  }
+}

@@ -1,0 +1,44 @@
+{
+  "id": "01_move_meeting_and_reminder",
+  "seed": 101,
+  "initial_state": {
+    "calendar": [
+      {
+        "id": "meeting_1",
+        "title": "Project Meeting",
+        "time": "17:00",
+        "date": "2026-10-15"
+      }
+    ],
+    "reminders": [],
+    "messages": [],
+    "smart_home": {
+      "living_room_light": {
+        "id": "living_room_light",
+        "name": "Living Room Light",
+        "status": "off"
+      },
+      "kitchen_light": {
+        "id": "kitchen_light",
+        "name": "Kitchen Light",
+        "status": "off"
+      }
+    },
+    "shopping_list": []
+  },
+  "user_request": "Move my 5 PM meeting to 6 PM and remind me 30 minutes before.",
+  "injected_faults": [],
+  "expected_final_state": {
+    "calendar": [
+      {
+        "id": "meeting_1",
+        "time": "18:00"
+      }
+    ],
+    "reminders": [
+      {
+        "time": "17:30"
+      }
+    ]
+  }
+}

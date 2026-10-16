@@ -1,0 +1,69 @@
+{
+  "id": "08_reminder_timeout_fault",
+  "seed": 108,
+  "initial_state": {
+    "calendar": [
+      {
+        "id": "meeting_1",
+        "title": "Project Meeting",
+        "time": "17:00",
+        "date": "2026-10-15"
+      }
+    ],
+    "reminders": [],
+    "messages": [],
+    "smart_home": {
+      "living_room_light": {
+        "id": "living_room_light",
+        "name": "Living Room Light",
+        "status": "off"
+      },
+      "kitchen_light": {
+        "id": "kitchen_light",
+        "name": "Kitchen Light",
+        "status": "off"
+      }
+    },
+    "shopping_list": []
+  },
+  "user_request": "Set a reminder to check oven at 18:30.",
+  "injected_faults": [
+    {
+      "type": "timeout",
+      "tool": "create_reminder",
+      "seed": 801
+    },
+    {
+      "type": "timeout",
+      "tool": "create_reminder",
+      "seed": 802
+    },
+    {
+      "type": "timeout",
+      "tool": "create_reminder",
+      "seed": 803
+    },
+    {
+      "type": "timeout",
+      "tool": "create_reminder",
+      "seed": 804
+    },
+    {
+      "type": "timeout",
+      "tool": "create_reminder",
+      "seed": 805
+    },
+    {
+      "type": "timeout",
+      "tool": "create_reminder",
+      "seed": 806
+    }
+  ],
+  "expected_final_state": {
+    "reminders": []
+  },
+  "expected_fault_triggered": {
+    "type": "timeout",
+    "tool": "create_reminder"
+  }
+}

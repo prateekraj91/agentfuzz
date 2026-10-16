@@ -1,0 +1,50 @@
+{
+  "id": "13_lost_state_dependent_reminder_failure",
+  "seed": 113,
+  "initial_state": {
+    "calendar": [
+      {
+        "id": "meeting_1",
+        "title": "Project Meeting",
+        "time": "17:00",
+        "date": "2026-10-15"
+      }
+    ],
+    "reminders": [],
+    "messages": [],
+    "smart_home": {
+      "living_room_light": {
+        "id": "living_room_light",
+        "name": "Living Room Light",
+        "status": "off"
+      },
+      "kitchen_light": {
+        "id": "kitchen_light",
+        "name": "Kitchen Light",
+        "status": "off"
+      }
+    },
+    "shopping_list": []
+  },
+  "user_request": "Move my 5 PM meeting to 18:00, turn on living room light, and set a reminder 30 minutes before the 5 PM meeting.",
+  "injected_faults": [],
+  "expected_final_state": {
+    "calendar": [
+      {
+        "id": "meeting_1",
+        "time": "18:00"
+      }
+    ],
+    "reminders": [
+      {
+        "time": "17:30"
+      }
+    ],
+    "smart_home": {
+      "living_room_light": {
+        "status": "on"
+      }
+    }
+  },
+  "expected_detector": "lost_state_mid_task"
+}
